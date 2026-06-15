@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<OutputPath>..\0Bins\Other\AssetRipper.Export.UnityProjects\$(Configuration)\</OutputPath>
 		<IntermediateOutputPath>..\0Bins\obj\AssetRipper.Export.UnityProjects\$(Configuration)\</IntermediateOutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -41,17 +41,18 @@ internal class ShaderDecompilerTests
 	}
 
 	[Test]
-	public void SummaryReportsVulkanAsDecompilable()
+	public void SummaryListsDirectXPlatforms()
 	{
 		StringWriter writer = new();
 
-		ShaderDecompiler.WriteDecompilationSummary([GPUPlatform.Vulkan], writer);
+		ShaderDecompiler.WriteDecompilationSummary([GPUPlatform.D3D11], recoveredProgramCount: 2, writer);
 
 		string output = writer.ToString();
 		using (Assert.EnterMultipleScope())
 		{
 			Assert.That(output, Does.Contain("Shader decompilation (experimental)"));
-			Assert.That(output, Does.Contain("Vulkan: decompilable"));
+			Assert.That(output, Does.Contain("D3D11: DirectX"));
+			Assert.That(output, Does.Contain("Recovered 2 GPU program(s)"));
 		}
 	}
 
@@ -60,7 +61,7 @@ internal class ShaderDecompilerTests
 	{
 		StringWriter writer = new();
 
-		ShaderDecompiler.WriteDecompilationSummary([GPUPlatform.Metal], writer);
+		ShaderDecompiler.WriteDecompilationSummary([GPUPlatform.Metal], recoveredProgramCount: 0, writer);
 
 		Assert.That(writer.ToString(), Does.Contain("Metal: not supported"));
 	}
@@ -70,8 +71,47 @@ internal class ShaderDecompilerTests
 	{
 		StringWriter writer = new();
 
-		ShaderDecompiler.WriteDecompilationSummary([], writer);
+		ShaderDecompiler.WriteDecompilationSummary([], recoveredProgramCount: 0, writer);
 
 		Assert.That(writer.ToString(), Does.Contain("No compiled GPU programs were found."));
+	}
+
+	[Test]
+	public void ExtractDxbcBlobsFindsContainersByMagicAndSize()
+	{
+		// Build a buffer: [4 junk bytes][DXBC container of size 40][4 junk bytes][DXBC container of size 36].
+		byte[] first = MakeDxbc(40);
+		byte[] second = MakeDxbc(36);
+		byte[] buffer = new byte[4 + first.Length + 4 + second.Length];
+		Array.Copy(first, 0, buffer, 4, first.Length);
+		Array.Copy(second, 0, buffer, 4 + first.Length + 4, second.Length);
+
+		List<byte[]> blobs = ShaderBlobExtractor.ExtractDxbcBlobs(buffer);
+
+		using (Assert.EnterMultipleScope())
+		{
+			Assert.That(blobs, Has.Count.EqualTo(2));
+			Assert.That(blobs[0], Has.Length.EqualTo(40));
+			Assert.That(blobs[1], Has.Length.EqualTo(36));
+		}
+	}
+
+	[Test]
+	public void ExtractDxbcBlobsIgnoresInvalidSize()
+	{
+		byte[] buffer = new byte[64];
+		// "DXBC" magic but a bogus oversized total-size field.
+		buffer[0] = 0x44; buffer[1] = 0x58; buffer[2] = 0x42; buffer[3] = 0x43;
+		BitConverter.GetBytes((uint)100000).CopyTo(buffer, 24);
+
+		Assert.That(ShaderBlobExtractor.ExtractDxbcBlobs(buffer), Is.Empty);
+	}
+
+	private static byte[] MakeDxbc(int size)
+	{
+		byte[] dxbc = new byte[size];
+		dxbc[0] = 0x44; dxbc[1] = 0x58; dxbc[2] = 0x42; dxbc[3] = 0x43; // "DXBC"
+		BitConverter.GetBytes((uint)size).CopyTo(dxbc, 24); // total size at offset 24
+		return dxbc;
 	}
 }
