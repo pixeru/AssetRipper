@@ -30,6 +30,10 @@ public sealed class IL2CppManager : BaseManager
 		}
 
 		LibCpp2IlBinaryRegistry.RegisterBuiltInBinarySupport();
+
+		// Enable the traditional (experimental) Il2Cpp analysis at Script Content Level 3.
+		RecoveryProcessingLayers ??= TraditionalIl2CppAnalysis.CreateRecoveryProcessingLayers();
+		RecoveryOutputFormat ??= TraditionalIl2CppAnalysis.CreateRecoveryOutputFormat();
 	}
 
 	public static List<Cpp2IlProcessingLayer> DefaultProcessingLayers { get; } =
