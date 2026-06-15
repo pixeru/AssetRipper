@@ -12,6 +12,7 @@ using AssetRipper.Processing.Assemblies;
 using AssetRipper.Processing.AudioMixers;
 using AssetRipper.Processing.Deduplication;
 using AssetRipper.Processing.Editor;
+using AssetRipper.Processing.PathOverrides;
 using AssetRipper.Processing.Prefabs;
 using AssetRipper.Processing.Scenes;
 using AssetRipper.Processing.ScriptableObject;
@@ -81,6 +82,10 @@ public class ExportHandler
 		yield return new InternalsVisibileToPublicKeyRemover();
 
 		// Asset processors
+		if (Settings.ProcessingSettings.PathOverrides is { IsEmpty: false } pathOverrides)
+		{
+			yield return new PathOverrideProcessor(pathOverrides);
+		}
 		yield return new SceneDefinitionProcessor();
 		yield return new OriginalPathProcessor(Settings.ProcessingSettings.BundledAssetsExportMode);
 		yield return new MainAssetProcessor();

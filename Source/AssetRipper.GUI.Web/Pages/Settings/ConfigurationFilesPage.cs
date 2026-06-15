@@ -1,5 +1,7 @@
 ﻿using AssetRipper.Configuration;
+using AssetRipper.Import.Logging;
 using AssetRipper.NativeDialogs;
+using AssetRipper.Processing.PathOverrides;
 using AssetRipper.SourceGenerated.Extensions;
 using Microsoft.AspNetCore.Http;
 
@@ -15,9 +17,46 @@ public sealed partial class ConfigurationFilesPage : DefaultPage
 	{
 		new H1(writer).Close(GetTitle());
 
-		ReadOnlySpan<HtmlTab> tabs = [SingletonsTab.Instance, ListsTab.Instance];
+		ReadOnlySpan<HtmlTab> tabs = [SingletonsTab.Instance, ListsTab.Instance, PathOverridesTab.Instance];
 		HtmlTab.WriteNavigation(writer, tabs);
 		HtmlTab.WriteContent(writer, tabs);
+	}
+
+	public static async Task HandlePathOverridesSetPostRequest(HttpContext context)
+	{
+		string? content = null;
+		if (context.Request.Form.TryGetString("Content", out string? formContent))
+		{
+			content = formContent;
+		}
+		else
+		{
+			string? path = await OpenFileDialog.OpenFile();
+			if (!string.IsNullOrEmpty(path))
+			{
+				content = File.ReadAllText(path);
+			}
+		}
+
+		if (!string.IsNullOrWhiteSpace(content))
+		{
+			try
+			{
+				GameFileLoader.Settings.ProcessingSettings.PathOverrides = PathOverrideData.FromJson(content);
+			}
+			catch (Exception ex)
+			{
+				Logger.Error(LogCategory.Export, "Failed to parse path overrides JSON.", ex);
+			}
+		}
+
+		await Results.Redirect("/ConfigurationFiles").ExecuteAsync(context);
+	}
+
+	public static Task HandlePathOverridesClearPostRequest(HttpContext context)
+	{
+		GameFileLoader.Settings.ProcessingSettings.PathOverrides = null;
+		return Results.Redirect("/ConfigurationFiles").ExecuteAsync(context);
 	}
 
 	public static async Task HandleSingletonAddPostRequest(HttpContext context)
