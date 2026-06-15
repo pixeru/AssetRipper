@@ -1,4 +1,5 @@
 using AssetRipper.Assets;
+using AssetRipper.Assets.Bundles;
 using AssetRipper.Assets.Collections;
 using AssetRipper.Export.UnityProjects.Project;
 using AssetRipper.Import.Configuration;
@@ -11,10 +12,11 @@ namespace AssetRipper.Export.UnityProjects;
 
 public class ProjectAssetContainer : IExportContainer
 {
-	public ProjectAssetContainer(ProjectExporter exporter, CoreConfiguration options, IEnumerable<IUnityObjectBase> assets,
+	public ProjectAssetContainer(ProjectExporter exporter, CoreConfiguration options, GameBundle bundle, IEnumerable<IUnityObjectBase> assets,
 		IReadOnlyList<IExportCollection> collections)
 	{
 		m_exporter = exporter ?? throw new ArgumentNullException(nameof(exporter));
+		m_bundle = bundle;
 		CurrentCollection = null!;
 
 		ExportVersion = options.Version;
@@ -48,6 +50,7 @@ public class ProjectAssetContainer : IExportContainer
 
 	public long GetExportID(IUnityObjectBase asset)
 	{
+		asset = m_bundle.ResolveDeduplication(asset);
 		if (m_assetCollections.TryGetValue(asset, out IExportCollection? collection))
 		{
 			return collection.GetExportID(this, asset);
@@ -63,6 +66,7 @@ public class ProjectAssetContainer : IExportContainer
 
 	public MetaPtr CreateExportPointer(IUnityObjectBase asset)
 	{
+		asset = m_bundle.ResolveDeduplication(asset);
 		if (m_assetCollections.TryGetValue(asset, out IExportCollection? collection))
 		{
 			return collection.CreateExportPointer(this, asset, collection == CurrentCollection);
@@ -90,6 +94,7 @@ public class ProjectAssetContainer : IExportContainer
 	public UnityVersion ExportVersion { get; }
 
 	private readonly ProjectExporter m_exporter;
+	private readonly GameBundle m_bundle;
 	private readonly Dictionary<IUnityObjectBase, IExportCollection> m_assetCollections = new();
 
 	private readonly IBuildSettings? m_buildSettings;

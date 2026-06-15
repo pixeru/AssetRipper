@@ -18,6 +18,44 @@ public sealed partial class GameBundle : Bundle
 	/// </summary>
 	public override string Name => nameof(GameBundle);
 
+	private Dictionary<IUnityObjectBase, IUnityObjectBase>? deduplicationMap;
+
+	/// <summary>
+	/// A mapping from duplicate assets to the canonical asset that should represent them during export.
+	/// </summary>
+	/// <remarks>
+	/// Populated by the asset deduplication processor. References to a key are exported as references to its value,
+	/// and the key itself is not given its own export collection (so no redundant file is written).
+	/// </remarks>
+	public IReadOnlyDictionary<IUnityObjectBase, IUnityObjectBase> DeduplicationMap => deduplicationMap ?? EmptyDeduplicationMap;
+
+	private static readonly Dictionary<IUnityObjectBase, IUnityObjectBase> EmptyDeduplicationMap = new();
+
+	/// <summary>
+	/// Sets the <see cref="DeduplicationMap"/>.
+	/// </summary>
+	/// <param name="map">A mapping from each duplicate asset to its canonical replacement.</param>
+	public void SetDeduplicationMap(Dictionary<IUnityObjectBase, IUnityObjectBase> map)
+	{
+		deduplicationMap = map;
+	}
+
+	/// <summary>
+	/// Returns the canonical asset for <paramref name="asset"/>, or <paramref name="asset"/> itself if it is not a duplicate.
+	/// </summary>
+	public IUnityObjectBase ResolveDeduplication(IUnityObjectBase asset)
+	{
+		return deduplicationMap is not null && deduplicationMap.TryGetValue(asset, out IUnityObjectBase? canonical) ? canonical : asset;
+	}
+
+	/// <summary>
+	/// Returns true if <paramref name="asset"/> is a duplicate that has been consolidated into a canonical asset.
+	/// </summary>
+	public bool IsDeduplicated(IUnityObjectBase asset)
+	{
+		return deduplicationMap is not null && deduplicationMap.ContainsKey(asset);
+	}
+
 	/// <summary>
 	/// Returns true if the given bundle is compatible with this bundle.
 	/// </summary>

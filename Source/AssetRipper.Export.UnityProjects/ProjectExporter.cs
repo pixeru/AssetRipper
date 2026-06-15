@@ -79,7 +79,7 @@ public sealed partial class ProjectExporter
 		EventExportPreparationFinished?.Invoke();
 
 		EventExportStarted?.Invoke();
-		ProjectAssetContainer container = new ProjectAssetContainer(this, options, fileCollection.FetchAssets(), collections);
+		ProjectAssetContainer container = new ProjectAssetContainer(this, options, fileCollection, fileCollection.FetchAssets(), collections);
 		int exportableCount = collections.Count(c => c.Exportable);
 		int currentExportable = 0;
 
@@ -109,6 +109,11 @@ public sealed partial class ProjectExporter
 
 		foreach (IUnityObjectBase asset in fileCollection.FetchAssets())
 		{
+			if (fileCollection.IsDeduplicated(asset))
+			{
+				// This asset is a duplicate; references to it are redirected to its canonical asset during export.
+				continue;
+			}
 			if (!queued.Contains(asset))
 			{
 				IExportCollection collection = CreateCollection(asset);

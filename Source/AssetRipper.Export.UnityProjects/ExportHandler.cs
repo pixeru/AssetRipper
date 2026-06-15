@@ -10,6 +10,7 @@ using AssetRipper.Processing;
 using AssetRipper.Processing.AnimatorControllers;
 using AssetRipper.Processing.Assemblies;
 using AssetRipper.Processing.AudioMixers;
+using AssetRipper.Processing.Deduplication;
 using AssetRipper.Processing.Editor;
 using AssetRipper.Processing.Prefabs;
 using AssetRipper.Processing.Scenes;
@@ -94,6 +95,10 @@ public class ExportHandler
 		yield return new PrefabProcessor();
 		yield return new SpriteProcessor();
 		yield return new ScriptableObjectProcessor();
+		if (Settings.ProcessingSettings.EnableAssetDeduplication)
+		{
+			yield return new AssetDeduplicationProcessor();
+		}
 	}
 
 	public void Export(GameData gameData, string outputPath, FileSystem fileSystem)
