@@ -36,8 +36,10 @@ public static class GameFileLoader
 	/// </summary>
 	/// <remarks>
 	/// This is purely for UI functionality and has no direct effect on the presense of features.
+	/// Forced to true so the GUI exposes the implemented premium features (mesh separation, deduplication,
+	/// shader decompilation, Script Content Level 3, etc.) instead of disabling their toggles.
 	/// </remarks>
-	public static bool Premium => ExportHandler.GetType() != typeof(ExportHandler);
+	public static bool Premium => true;
 
 	public static void Reset()
 	{
