@@ -1,4 +1,5 @@
 using AssetRipper.Assets;
+using AssetRipper.Import.Logging;
 using AssetRipper.Mining.PredefinedAssets;
 using AssetRipper.Processing.Textures;
 using AssetRipper.SourceGenerated;
@@ -68,6 +69,19 @@ public class EngineAssetsExporter : IAssetExporter
 	public static EngineAssetsExporter CreateFromResourceData(EngineResourceData resourceData)
 	{
 		return new(new PredefinedAssetCache(resourceData));
+	}
+
+	/// <summary>
+	/// Registers user-defined packages so that matching assets are exported as references to those packages.
+	/// </summary>
+	/// <param name="packages">The user-defined, mined packages.</param>
+	public void AddUserPackages(IEnumerable<UnityPackageData> packages)
+	{
+		foreach (UnityPackageData package in packages)
+		{
+			int addedCount = Cache.AddUserPackage(package);
+			Logger.Info(LogCategory.Export, $"Loaded user package '{package.Name}' with {addedCount} asset reference(s).");
+		}
 	}
 
 	public bool TryCreateCollection(IUnityObjectBase asset, [NotNullWhen(true)] out IExportCollection? exportCollection)

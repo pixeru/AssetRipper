@@ -20,6 +20,14 @@ public class FullConfiguration : CoreConfiguration
 		set => SingletonData.SetStoredValue(nameof(ExportSettings), value);
 	}
 
+	/// <summary>
+	/// User-defined, mined packages used to export asset and package references instead of duplicating package assets.
+	/// </summary>
+	/// <remarks>
+	/// Populated at runtime from JSON uploaded on the Configuration Files page. See the Marrow Mining Demo for how to mine this data.
+	/// </remarks>
+	public List<UnityPackageData> UserDefinedPackages { get; } = new();
+
 	public bool SaveSettingsToDisk => ExportSettings.SaveSettingsToDisk;
 
 	public string? LanguageCode

@@ -1,5 +1,6 @@
 ﻿using AssetRipper.Configuration;
 using AssetRipper.Import.Logging;
+using AssetRipper.Mining.PredefinedAssets;
 using AssetRipper.NativeDialogs;
 using AssetRipper.Processing.PathOverrides;
 using AssetRipper.SourceGenerated.Extensions;
@@ -17,9 +18,37 @@ public sealed partial class ConfigurationFilesPage : DefaultPage
 	{
 		new H1(writer).Close(GetTitle());
 
-		ReadOnlySpan<HtmlTab> tabs = [SingletonsTab.Instance, ListsTab.Instance, PathOverridesTab.Instance];
+		ReadOnlySpan<HtmlTab> tabs = [SingletonsTab.Instance, ListsTab.Instance, PathOverridesTab.Instance, UserPackagesTab.Instance];
 		HtmlTab.WriteNavigation(writer, tabs);
 		HtmlTab.WriteContent(writer, tabs);
+	}
+
+	public static async Task HandleUserPackagesAddPostRequest(HttpContext context)
+	{
+		string[]? paths = await OpenFileDialog.OpenFiles();
+		if (paths is { Length: > 0 })
+		{
+			foreach (string path in paths)
+			{
+				try
+				{
+					UnityPackageData package = UnityPackageData.FromJson(File.ReadAllText(path));
+					GameFileLoader.Settings.UserDefinedPackages.Add(package);
+				}
+				catch (Exception ex)
+				{
+					Logger.Error(LogCategory.Export, $"Failed to parse user package '{path}'.", ex);
+				}
+			}
+		}
+
+		await Results.Redirect("/ConfigurationFiles").ExecuteAsync(context);
+	}
+
+	public static Task HandleUserPackagesClearPostRequest(HttpContext context)
+	{
+		GameFileLoader.Settings.UserDefinedPackages.Clear();
+		return Results.Redirect("/ConfigurationFiles").ExecuteAsync(context);
 	}
 
 	public static async Task HandlePathOverridesSetPostRequest(HttpContext context)

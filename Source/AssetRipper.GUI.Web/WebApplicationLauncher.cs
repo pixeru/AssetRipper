@@ -177,6 +177,8 @@ public static class WebApplicationLauncher
 		app.MapPost("/ConfigurationFiles/List/Replace", ConfigurationFilesPage.HandleListReplacePostRequest);
 		app.MapPost("/ConfigurationFiles/PathOverrides/Set", ConfigurationFilesPage.HandlePathOverridesSetPostRequest);
 		app.MapPost("/ConfigurationFiles/PathOverrides/Clear", ConfigurationFilesPage.HandlePathOverridesClearPostRequest);
+		app.MapPost("/ConfigurationFiles/UserPackages/Add", ConfigurationFilesPage.HandleUserPackagesAddPostRequest);
+		app.MapPost("/ConfigurationFiles/UserPackages/Clear", ConfigurationFilesPage.HandleUserPackagesClearPostRequest);
 
 		app.MapGet("/Settings/Edit", (context) =>
 		{

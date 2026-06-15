@@ -110,6 +110,30 @@ public sealed class PredefinedAssetCache
 		}
 	}
 
+	/// <summary>
+	/// Adds the assets of a user-defined, mined package so that matching assets are exported as references to the package
+	/// instead of being duplicated into the project.
+	/// </summary>
+	/// <remarks>
+	/// Each entry maps a mined <see cref="Object"/> to the package's <see cref="Mining.PredefinedAssets.PPtr"/>
+	/// (file id, GUID, and asset type). See the Marrow Mining Demo for how to produce this data.
+	/// </remarks>
+	/// <param name="package">The user-defined package data.</param>
+	/// <returns>The number of assets that were added to the cache.</returns>
+	public int AddUserPackage(UnityPackageData package)
+	{
+		int addedCount = 0;
+		foreach (KeyValuePair<Object, Mining.PredefinedAssets.PPtr> pair in package.Assets)
+		{
+			Mining.PredefinedAssets.PPtr pptr = pair.Value;
+			if (TryAdd(pair.Key, pptr.FileID, pptr.Guid, (AssetType)(int)pptr.Type))
+			{
+				addedCount++;
+			}
+		}
+		return addedCount;
+	}
+
 	public bool Contains(IUnityObjectBase asset, out long fileID, out UnityGuid guid, out AssetType assetType)
 	{
 		return asset switch

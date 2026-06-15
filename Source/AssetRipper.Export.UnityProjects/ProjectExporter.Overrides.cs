@@ -185,10 +185,18 @@ partial class ProjectExporter
 	public void DoFinalOverrides(FullConfiguration settings)
 	{
 		//Engine assets
-		OverrideExporter<IUnityObjectBase>(settings.SingletonData.TryGetStoredValue(nameof(EngineResourceData), out EngineResourceData? engineResourceData)
+		EngineAssetsExporter engineAssetsExporter = settings.SingletonData.TryGetStoredValue(nameof(EngineResourceData), out EngineResourceData? engineResourceData)
 			&& engineResourceData is not null
 			? EngineAssetsExporter.CreateFromResourceData(engineResourceData.Value)
-			: EngineAssetsExporter.CreateFromEmbeddedData(settings.Version));
+			: EngineAssetsExporter.CreateFromEmbeddedData(settings.Version);
+
+		//User defined packages
+		if (settings.UserDefinedPackages.Count > 0)
+		{
+			engineAssetsExporter.AddUserPackages(settings.UserDefinedPackages);
+		}
+
+		OverrideExporter<IUnityObjectBase>(engineAssetsExporter);
 
 		//Deleted assets
 		OverrideExporter<IUnityObjectBase>(new DeletedAssetsExporter());
